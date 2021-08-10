@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:riverpod_example/model/passenger.dart';
-import 'package:riverpod_example/pagination_notifier.dart';
+import 'package:riverpod_example/pagination_state.dart';
 import 'package:riverpod_example/provider.dart';
 
 class HomePage extends ConsumerStatefulWidget {
@@ -22,14 +22,11 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   void initState() {
     _pagingController.addPageRequestListener((pageKey) {
-      ref.read(pagintionNotifierProvider.notifier).add(pageKey);
+      ref.read(repositoryProvider).add(pageKey);
       print("the page is $pageKey");
     });
 
-    _subscription = ref
-        .read(pagintionNotifierProvider.notifier)
-        .getStream()
-        .listen((state) {
+    _subscription = ref.read(repositoryProvider).getStream().listen((state) {
       _pagingController.value = PagingState(
         error: state.error,
         nextPageKey: state.nextPageKey,
@@ -61,7 +58,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   void dispose() {
     _subscription.cancel();
     _pagingController.dispose();
-    ref.read(pagintionNotifierProvider.notifier).disposal();
+    ref.read(repositoryProvider).dispose();
     super.dispose();
   }
 }

@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:riverpod_example/api.dart';
-import 'package:riverpod_example/pagination_notifier.dart';
+import 'package:riverpod_example/pagination_state.dart';
 import 'package:rxdart/rxdart.dart';
 
 class Repository {
@@ -13,12 +13,21 @@ class Repository {
   Stream<PaginationState> get onNewsListState => onNewsListController.stream;
 
   final onPageRequest = StreamController<int>();
+  final _subscriptions = CompositeSubscription();
 
   add(int pagekey) {
     onPageRequest.sink.add(pagekey);
   }
 
-  Stream<PaginationState> fetchList(int pageKey) async* {
+  getStream() {
+    onPageRequest.stream
+        .flatMap(_fetchList)
+        .listen(onNewsListController.add)
+        .addTo(_subscriptions);
+    return onNewsListState;
+  }
+
+  Stream<PaginationState> _fetchList(int pageKey) async* {
     final lastState = onNewsListController.value;
     try {
       final response = await Api().getPassengers(pageKey);
@@ -40,6 +49,7 @@ class Repository {
 
   void dispose() {
     onPageRequest.close();
+    _subscriptions.dispose();
     onNewsListController.close();
   }
 }
